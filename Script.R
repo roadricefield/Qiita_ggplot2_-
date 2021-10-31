@@ -1,6 +1,6 @@
 library(ggplot2)
 
-df <- read.csv("level1.csv")
+df <- read.csv("https://github.com/roadricefield/Qiita_ggplot2_-/raw/main/level1.csv")
 
 g <- ggplot(df, aes(x = day, y = time)) + #グラフオブジェクト
      geom_line()
@@ -68,7 +68,7 @@ plot(g)
 
 
 
-df <- read.csv("level3.csv")
+df <- read.csv("https://github.com/roadricefield/Qiita_ggplot2_-/raw/main/level3.csv")
 
 g <- ggplot(df, aes(x = day, y = time, color = application)) + #色でapplication列を指定
         geom_line() +
@@ -118,7 +118,7 @@ plot(g)
 
 
 
-df <- read.csv("level4.csv")
+df <- read.csv("https://github.com/roadricefield/Qiita_ggplot2_-/raw/main/level4.csv")
 
 g <- ggplot(df, aes(x = Subject, y = Average)) +
         geom_bar(stat = "identity") + #stat = "identity"はおまじないです．
