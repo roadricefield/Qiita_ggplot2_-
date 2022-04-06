@@ -292,6 +292,10 @@ g <- ggplot(iris, aes(x = Sepal.Length, fill = Species)) +
 plot(g)
 
 
+
+
+
+#------------------------------------------------------------------------------------------------------
 library(ggplot2)
 
 data <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data",
@@ -328,6 +332,8 @@ for(i in 3:12){
   ggsave(plot = g, file = paste0("wdbc_plots/", colnames(ext_data)[i], ".png"), w = 6.2, h = 4.8, dpi = 600)
 }
 
+#---------------------------------------------------------------------------------------------------------------
+
 pdf("wdbc_plots.pdf", w = 6.2, h = 4.8) #PDFファイルを開く．
 for(i in 3:12){
   g <- ggplot(ext_data, aes(x = Diagnosis, y = ext_data[,i], fill = Diagnosis)) +
@@ -347,6 +353,9 @@ for(i in 3:12){
 }
 dev.off() #PDFファイルを閉じる．
 
+#-------------------------------------------------------------------------------------------------------------
+
+library(tidyverse)
 
 data <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data",
                  header = F)
@@ -358,29 +367,93 @@ ext_data <- data[,c(1, 2, seq(3, 30, 3))]
 
 colnames(ext_data) <- attri
 
-ext_data_mean <- tibble(Diagnosis = c("B", "M"))
-B <- which(ext_data$Diagnosis == "B")
-M <- which(ext_data$Diagnosis == "M")
+ext_data_mean <- apply(ext_data[, 3:12], 2, function(x) tapply(x ,ext_data$Diagnosis, mean)) %>% as.data.frame()
+ext_data_mean$Diagnosis <- rownames(ext_data_mean)
 
-for(i in 3:12) ext_data_mean <- cbind(ext_data_mean, c(mean(ext_data[B,i]), mean(ext_data[M,i])))
-colnames(ext_data_mean)[2:11] <- colnames(ext_data)[3:12]
+plot_violin <- function(obs){
+  g <- ggplot(ext_data, aes(x = Diagnosis, y = .data[[obs]], fill = Diagnosis)) +
+    geom_violin() +
+    theme_classic() +
+    theme(axis.title.x = element_blank(), axis.title.y = element_text(size = 15)) +
+    theme(axis.text = element_text(size = 15)) +
+    guides(fill = F) +
+    scale_fill_manual(values = c("royalblue", "firebrick3")) +
+    ylab(gsub(x = obs, pattern = "_", replacement = " "))
+  
+  g <- g +
+    geom_point(data = ext_data_mean, aes(x = Diagnosis, y =.data[[obs]]), 
+               fill = "white", size = 3, shape = 23)
+  
+  ggsave(plot = g, file = paste0("wdbc_plots/", obs, ".png"), w = 6.2, h = 4.8, dpi = 600)
+}
+
+sapply(attri[3:12], plot_violin)
+
+#-------------------------------------------------------------------------------------------------------------
+library(ggplot2)
+
+data <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data",
+                 header = F)
+
+attri <- c("ID", "Diagnosis", "Radius", "Texture", "Perimeter", "Area", "Smoothness",
+           "Compactness", "Concavity", "Concave_points", "Symmetry", "Fractal_dimension")
+
+ext_data <- data[,c(1, 2, seq(3, 30, 3))]
+
+colnames(ext_data) <- attri
 
 for(i in 3:11){
   for(j in (i+1):12){
     r <- round(cor(ext_data[,i],  ext_data[,j]), 2) #相関係数の計算
-    g <- ggplot(ext_data, aes(x = ext_data[,i], y = ext_data[,j], color = Diagnosis)) +
+    g <- ggplot(ext_data, aes(x = .data[[attri[i]]], y = .data[[attri[j]]], color = Diagnosis)) +
       geom_point(alpha = 0.5) +
       theme_classic() +
       theme(axis.title.x = element_text(size = 15), axis.title.y = element_text(size = 15)) +
       theme(axis.text = element_text(size = 15)) +
       scale_color_manual(values = c("royalblue", "firebrick3")) +
-      xlab(gsub(x = colnames(ext_data)[i], pattern = "_", replacement = " ")) +
-      ylab(gsub(x = colnames(ext_data)[j], pattern = "_", replacement = " ")) +
+      xlab(gsub(x = attri[i], pattern = "_", replacement = " ")) +
+      ylab(gsub(x = attri[j], pattern = "_", replacement = " ")) +
       ggtitle(paste0("r = ", r)) + #相関係数を表示
       theme(plot.title = element_text(size = 15)) +
       guides(alpha = F)
-
-    ggsave(plot = g, file = paste0("wdbc_plots_cor/", colnames(ext_data)[i], "_vs_", colnames(ext_data)[j], ".png"), 
+    
+    ggsave(plot = g, file = paste0("wdbc_plots_cor/", attri[i], "_vs_", attri[j], ".png"), 
            w = 6.2, h = 4.8, dpi = 600)
   }
 }
+
+#---------------------------------------------------------------------------------------------------------------
+
+library(tidyverse)
+
+data <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data",
+                 header = F)
+
+attri <- c("ID", "Diagnosis", "Radius", "Texture", "Perimeter", "Area", "Smoothness",
+           "Compactness", "Concavity", "Concave_points", "Symmetry", "Fractal_dimension")
+
+ext_data <- data[,c(1, 2, seq(3, 30, 3))]
+
+colnames(ext_data) <- attri
+
+attri_comb <- combn(attri[3:12], m = 2)
+
+plot_cor <- function(obs){
+  r <- round(cor(ext_data[,obs[1]],  ext_data[,obs[2]]), 2) #相関係数の計算
+  g <- ggplot(ext_data, aes(x = .data[[obs[1]]], y = .data[[obs[2]]], color = Diagnosis)) +
+    geom_point(alpha = 0.5) +
+    theme_classic() +
+    theme(axis.title.x = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+    theme(axis.text = element_text(size = 15)) +
+    scale_color_manual(values = c("royalblue", "firebrick3")) +
+    xlab(gsub(x = obs[1], pattern = "_", replacement = " ")) +
+    ylab(gsub(x = obs[2], pattern = "_", replacement = " ")) +
+    ggtitle(paste0("r = ", r)) + #相関係数を表示
+    theme(plot.title = element_text(size = 15)) +
+    guides(alpha = F)
+  
+  ggsave(plot = g, file = paste0("wdbc_plots_cor/", obs[1], "_vs_", obs[2], ".png"), 
+         w = 6.2, h = 4.8, dpi = 600)
+}
+
+apply(attri_comb, 2, plot_cor)
